@@ -1,15 +1,13 @@
 const express = require("express")
 const cors = require("cors")
-const jwt = require("jsonwebtoken")
-require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
+const jwt = require('jsonwebtoken');
+require('dotenv').config()
+
 const port = 5000
-
-app.use(cors())
-app.use(express.json())
-
-
+app.use(cors());
+app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@cluster0.7xhaxuz.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -23,8 +21,8 @@ const client = new MongoClient(uri, {
 
 
 const createToken = (email) => {
-    const token = jwt.sign({ email }, process.env.SECRET_KEY, { expiresIn: "2 days" })
-    return res.send({ token });
+    const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: "2 days" })
+    return token;
 }
 
 const verifyToken = (req, res, next) => {
@@ -32,11 +30,11 @@ const verifyToken = (req, res, next) => {
         return res.status(401).send("Unauthorized Access")
     }
     const authorization = req.headers.authorization.split(" ")[1]
-    jwt.verify(authorization, process.env.SECRET_KEY, function (error, decoded) {
-        if (error) {
-            return res.status(403).send("Forbidden Access")
-        }
-        req.decoded = decoded
+    jwt.verify(authorization, process.env.ACCESS_TOKEN, function (error, decoded) {
+        // if (error) {
+        //     return res.status(403).send("Forbidden Access")
+        // }
+        // req.decoded = decoded
         next()
     });
 }
@@ -44,7 +42,7 @@ const verifyToken = (req, res, next) => {
 async function run() {
     try {
         await client.connect();
-        const recipes = await client.db("recipe-easy").collection("recipes")
+        const recipes = client.db("recipe-easy").collection("recipes")
         const users = client.db("recipe-easy").collection("users")
 
         app.get("/recipes", async (req, res) => {
@@ -84,14 +82,12 @@ async function run() {
             res.send(result)
         })
 
-
         // only login user
-       app.get("/users", verifyToken, async (req, res) => {
+        app.get("/users", verifyToken, async (req, res) => {
             const email = req.query.email
             const query = { email: email }
             const result = await users.findOne(query)
             res.send(result)
-            console.log("result", result)
         })
 
         app.post("/users", async (req, res) => {
