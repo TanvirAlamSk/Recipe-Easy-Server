@@ -86,12 +86,8 @@ async function run() {
 
 
         // only login user
-        app.get("/users", verifyToken, async (req, res) => {
+       app.get("/users", verifyToken, async (req, res) => {
             const email = req.query.email
-            if (email !== req.decoded.email) {
-                return res.status(403).send("Forbidden Access")
-            }
-            // verifyToken,
             const query = { email: email }
             const result = await users.findOne(query)
             res.send(result)
