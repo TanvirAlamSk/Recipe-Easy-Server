@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 
 const createToken = (email) => {
     const token = jwt.sign({ email }, process.env.SECRET_KEY, { expiresIn: "2 days" })
-    return token;
+    return res.send({ token });
 }
 
 const verifyToken = (req, res, next) => {
